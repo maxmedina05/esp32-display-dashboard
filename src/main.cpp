@@ -24,6 +24,12 @@ static const char* MDNS_NAME = "esp32-dashboard";
 static const uint32_t WEATHER_INTERVAL_MS = 10UL * 60UL * 1000UL;  // 10 min
 static const uint32_t USAGE_INTERVAL_MS   =  2UL * 60UL * 1000UL;  //  2 min
 
+// Backlight PWM (Arduino-ESP32 2.x LEDC API). GPIO 4 is TFT_BL, active HIGH.
+static const int BL_PWM_CHANNEL = 7;       // a high channel TFT_eSPI won't touch
+static const int BL_PWM_FREQ    = 5000;    // 5 kHz — no visible flicker
+static const int BL_PWM_BITS    = 8;       // 0..255 duty
+static const int BL_MIN_PCT     = 5;       // floor so the screen never goes fully dark
+
 // ---------------- Claude / Anthropic palette ----------------
 // Hex values from Anthropic's published brand palette (colors aren't
 // copyrightable; no logo/wordmark is reproduced). RGB565 for the ST7789.
@@ -44,6 +50,7 @@ struct Settings {
   bool   showClock = true, showDate = true, showWeather = true, use12h = false;
   bool   showUsage = true;
   String usageUrl = "http://192.168.0.163:8088/usage";  // the LAN helper
+  uint8_t brightness = 100;   // backlight % (5..100), driven via PWM on TFT_BL
 };
 Settings cfg;
 
@@ -58,6 +65,7 @@ void loadSettings() {
   cfg.use12h     = prefs.getBool("h12", cfg.use12h);
   cfg.showUsage  = prefs.getBool("usg", cfg.showUsage);
   cfg.usageUrl   = prefs.getString("uurl", cfg.usageUrl);
+  cfg.brightness = prefs.getUChar("bri", cfg.brightness);
   prefs.end();
 }
 
@@ -72,7 +80,16 @@ void saveSettings() {
   prefs.putBool("h12", cfg.use12h);
   prefs.putBool("usg", cfg.showUsage);
   prefs.putString("uurl", cfg.usageUrl);
+  prefs.putUChar("bri", cfg.brightness);
   prefs.end();
+}
+
+// Map brightness % -> PWM duty and push it to the backlight.
+void applyBrightness() {
+  int pct = cfg.brightness;
+  if (pct < BL_MIN_PCT) pct = BL_MIN_PCT;
+  if (pct > 100) pct = 100;
+  ledcWrite(BL_PWM_CHANNEL, (pct * 255) / 100);
 }
 
 // ---------------- live state ----------------
@@ -334,6 +351,9 @@ String htmlPage() {
   p += "<div class='row'><input type='checkbox' name='wx' " + chkWx + "><span>Show weather</span></div>";
   p += "<div class='row'><input type='checkbox' name='usg' " + chkUsg + "><span>Show Claude usage</span></div>";
   p += "<div class='row'><input type='checkbox' name='h12' " + chk12 + "><span>12-hour time</span></div>";
+  p += "<label>Brightness: <span id='bv'>" + String(cfg.brightness) + "</span>%</label>";
+  p += "<input type='range' min='5' max='100' name='bri' value='" + String(cfg.brightness) +
+       "' oninput=\"document.getElementById('bv').textContent=this.value\">";
   p += F("<button type='submit'>Save</button></form>");
   p += "<div class='muted'>Device: " + WiFi.localIP().toString() + " &middot; http://" + String(MDNS_NAME) + ".local</div>";
   p += F("</div></body></html>");
@@ -352,7 +372,9 @@ void handleSave() {
   cfg.showWeather = server.hasArg("wx");
   cfg.showUsage   = server.hasArg("usg");
   cfg.use12h      = server.hasArg("h12");
+  if (server.hasArg("bri")) cfg.brightness = (uint8_t) constrain(server.arg("bri").toInt(), BL_MIN_PCT, 100);
   saveSettings();
+  applyBrightness();              // take effect right away
   Serial.println("Settings saved via web.");
   g_needFullRedraw = true;
   g_needWeatherNow = true;
@@ -374,10 +396,14 @@ void startWebServer() {
 void setup() {
   Serial.begin(115200);
   delay(300);
-  pinMode(TFT_BL, OUTPUT); digitalWrite(TFT_BL, HIGH);
-  tft.init(); tft.setRotation(1);
+  tft.init(); tft.setRotation(1);   // TFT_eSPI drives TFT_BL HIGH here
+
+  // Re-own the backlight pin as a PWM output so brightness is adjustable.
+  ledcSetup(BL_PWM_CHANNEL, BL_PWM_FREQ, BL_PWM_BITS);
+  ledcAttachPin(TFT_BL, BL_PWM_CHANNEL);
 
   loadSettings();
+  applyBrightness();                // honor the saved brightness immediately
   centerMsg("Starting...", CLAUDE_CREAM);
 
   if (!connectWiFi()) { centerMsg("WiFi FAILED", CLAUDE_RED, "check secrets.h / 2.4GHz", CLAUDE_GREY); return; }
