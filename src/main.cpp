@@ -202,19 +202,24 @@ void drawClockAndDate() {
     char hm[6], ss[3];
     strftime(hm, sizeof(hm), cfg.use12h ? "%I:%M" : "%H:%M", &t);
     strftime(ss, sizeof(ss), "%S", &t);
-    const int fHM = 7, fSS = 4, gap = 4;
-    int wHM = tft.textWidth(hm, fHM);
-    String ssStr = String(":") + ss;
-    int wSS = tft.textWidth(ssStr.c_str(), fSS);
-    int x0 = (SCREEN_W - (wHM + gap + wSS)) / 2;
-    int baseY = 64;
+    // ~32px clock via the scaled GLCD font — still the biggest element, but
+    // smaller than the 48px 7-seg (font 7), which only exists at that one size.
+    const int gap = 6, topY = 18;
     tft.setTextDatum(TL_DATUM);
+    tft.setTextPadding(0);
+    tft.setTextSize(4);                       // HH:MM -> 32px tall
+    int wHM = tft.textWidth(hm, 1);
+    String ssStr = String(":") + ss;
+    tft.setTextSize(2);                       // seconds -> 16px tall
+    int wSS = tft.textWidth(ssStr.c_str(), 1);
+    int x0 = (SCREEN_W - (wHM + gap + wSS)) / 2;
+    tft.setTextSize(4);
     tft.setTextColor(CLAUDE_CREAM, TFT_BLACK);
-    tft.setTextPadding(tft.textWidth("00:00", fHM));
-    tft.drawString(hm, x0, baseY - tft.fontHeight(fHM), fHM);
+    tft.drawString(hm, x0, topY, 1);
+    tft.setTextSize(2);
     tft.setTextColor(CLAUDE_CLAY, TFT_BLACK);
-    tft.setTextPadding(tft.textWidth(":00", fSS));
-    tft.drawString(ssStr, x0 + wHM + gap, baseY - tft.fontHeight(fSS), fSS);
+    tft.drawString(ssStr, x0 + wHM + gap, topY + 32 - 16, 1);  // bottom-aligned
+    tft.setTextSize(1);                       // IMPORTANT: reset scale for other rows
   }
 
   if (cfg.showDate) {
@@ -223,32 +228,34 @@ void drawClockAndDate() {
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(CLAUDE_GREY, TFT_BLACK);
     tft.setTextPadding(SCREEN_W);
-    tft.drawString(dateStr, SCREEN_W / 2, 82, 2);
+    tft.drawString(dateStr, SCREEN_W / 2, 62, 2);   // date (16px)
   }
   tft.setTextPadding(0);
 }
 
 void drawWeather() {
-  const int y = 102, f = 2;
-  tft.fillRect(0, y - 9, SCREEN_W, 18, TFT_BLACK);
+  const int y = 82, fNum = 2, fCond = 2;
+  tft.setTextSize(1);
+  tft.fillRect(0, y - 10, SCREEN_W, 20, TFT_BLACK);
   if (!cfg.showWeather) return;
   if (!g_haveWeather) {
-    tft.setTextDatum(MC_DATUM); tft.setTextColor(CLAUDE_GREY, TFT_BLACK);
-    tft.drawString("weather: --", SCREEN_W / 2, y, f); return;
+    tft.setTextDatum(MC_DATUM); tft.setTextPadding(0);
+    tft.setTextColor(CLAUDE_GREY, TFT_BLACK);
+    tft.drawString("weather: --", SCREEN_W / 2, y, fNum); return;
   }
   char num[8]; snprintf(num, sizeof(num), "%.1f", g_tempC);
   String rest = String("C  ") + g_condition;
   const int degR = 2, degGap = 2;
-  int wNum = tft.textWidth(num, f), wRest = tft.textWidth(rest.c_str(), f);
-  int total = wNum + (degGap + degR * 2 + 2) + wRest;
+  int wNum = tft.textWidth(num, fNum), wRest = tft.textWidth(rest.c_str(), fCond);
+  int total = wNum + degGap + degR * 2 + 2 + wRest;
   int x = (SCREEN_W - total) / 2;
-  tft.setTextDatum(ML_DATUM);
+  tft.setTextDatum(ML_DATUM); tft.setTextPadding(0);
   tft.setTextColor(CLAUDE_CLAY, TFT_BLACK);
-  tft.drawString(num, x, y, f); x += wNum + degGap;
-  tft.drawCircle(x + degR, y - tft.fontHeight(f) / 2 + degR + 1, degR, CLAUDE_CLAY);
+  tft.drawString(num, x, y, fNum); x += wNum + degGap;
+  tft.drawCircle(x + degR, y - tft.fontHeight(fNum) / 2 + degR + 1, degR, CLAUDE_CLAY);
   x += degR * 2 + 2;
   tft.setTextColor(CLAUDE_CREAM, TFT_BLACK);
-  tft.drawString(rest, x, y, f);
+  tft.drawString(rest, x, y, fCond);
 }
 
 // A compact horizontal gauge: outlined track with a proportional fill that
@@ -265,7 +272,8 @@ void drawBar(int x, int y, int w, int h, float pct) {
 }
 
 void drawUsage() {
-  const int y = 122;
+  const int y = 114;
+  tft.setTextSize(1);
   tft.fillRect(0, y - 11, SCREEN_W, 24, TFT_BLACK);  // clear the whole usage band
   if (!cfg.showUsage) return;
   if (!g_haveUsage) {
@@ -275,7 +283,7 @@ void drawUsage() {
     tft.setTextPadding(0);
     return;
   }
-  const int barH = 11, barY = y - barH / 2, f = 2;
+  const int barH = 16, barY = y - barH / 2, f = 2;
   char pc[6];
   tft.setTextDatum(ML_DATUM); tft.setTextPadding(0);
   // Session (5h) on the left, weekly (7d) on the right.
