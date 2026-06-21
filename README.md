@@ -1,5 +1,9 @@
 # ESP32 Display Dashboard
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Platform: ESP32](https://img.shields.io/badge/platform-ESP32-blue.svg)](https://www.espressif.com/en/products/socs/esp32)
+[![Framework: Arduino + PlatformIO](https://img.shields.io/badge/framework-Arduino%20%2B%20PlatformIO-orange.svg)](https://platformio.org/)
+
 A tiny LAN dashboard running on an **ESP32 board with a 1.14" ST7789 IPS display**.
 The screen shows at-a-glance info; a small web page served by the device (on the local
 network) lets you configure what's displayed.
@@ -17,6 +21,16 @@ network) lets you configure what's displayed.
 > **Privacy note:** the device only talks to your LAN and public weather/NTP servers. It
 > never sees your Anthropic credentials — the usage helper runs on your own machine and
 > exposes only two percentages. WiFi credentials live in a gitignored `secrets.h`.
+
+## Screenshots
+
+| On the device | Web config page |
+|---|---|
+| ![Dashboard running on the ESP32: clock, date, weather, and Claude session/weekly usage gauges](docs/images/dashboard.jpg) | ![Browser config page served by the device on the LAN](docs/images/web-config.png) |
+
+The screen shows the time, date, weather, and two gauges — **S** (5-hour session limit) and
+**W** (7-day weekly limit) — fed by the optional local helper. The config page is reachable
+at `http://esp32-dashboard.local` from any browser on the same network.
 
 For full hardware details and the confirmed pinout, see **[docs/HARDWARE.md](docs/HARDWARE.md)**.
 
@@ -107,5 +121,25 @@ with other boards' working pin maps are welcome.
 
 ## License
 
-[MIT](LICENSE) — free to use, modify, and share. Uses Anthropic's published brand color
-values only (no logos or marks); not affiliated with or endorsed by Anthropic.
+This project is licensed under the **[MIT License](LICENSE)** — free to use, modify, and
+share, including commercially, provided the copyright notice is retained.
+
+### Third-party components
+
+This project builds on the following, each under its own license:
+
+| Component | License | Used for |
+|---|---|---|
+| [Arduino-ESP32 core](https://github.com/espressif/arduino-esp32) | LGPL-2.1 / Apache-2.0 | WiFi, web server, NVS, NTP, mDNS |
+| [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI) | FreeBSD (BSD-2-Clause-like) | ST7789 display driver |
+| [ArduinoJson](https://github.com/bblanchon/ArduinoJson) | MIT | parsing weather / usage JSON |
+| [Open-Meteo](https://open-meteo.com) | CC BY 4.0 (data) | weather data (no API key) |
+
+Datasheets under `docs/datasheets/` are © their respective manufacturers (Espressif,
+Sitronix) and are included for reference only.
+
+### Trademark note
+
+The on-screen styling reuses **color values** from Anthropic's published brand palette.
+Colors are not copyrightable; no Anthropic logo, wordmark, or "Claude" mark is reproduced.
+This project is **not affiliated with, sponsored by, or endorsed by Anthropic**.
