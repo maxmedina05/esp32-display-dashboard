@@ -10,7 +10,7 @@
 | Field | Value |
 |---|---|
 | Seller / brand | TENSTAR ROBOT (AliExpress) |
-| Listing | item `1005009890213912` (de.aliexpress.com) |
+| Listing | [de.aliexpress.com item 1005009890213912](https://de.aliexpress.com/item/1005009890213912.html) |
 | Form factor | ESP32 dev board with **integrated 1.14" IPS display** |
 | Closest known design | **LilyGO/TTGO T-Display clone** (confirmed by working pinout) |
 | Also marketed as | "ideaspark ESP32 1.14 inch ST7789" family |
@@ -45,6 +45,7 @@
 |---|---|
 | Panel | 1.14" IPS, full color |
 | Controller | **ST7789V** |
+| Touch | **None** — ST7789V is display-only; interact via the on-board buttons |
 | Resolution | **135 × 240** |
 | Interface | 4-wire SPI |
 | Color inversion | **ON** (`TFT_INVERSION_ON`) |

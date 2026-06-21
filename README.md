@@ -38,6 +38,8 @@ For full hardware details and the confirmed pinout, see **[docs/HARDWARE.md](doc
 
 - ESP32-WROOM-32 + 1.14" ST7789 (135×240) IPS display — a LilyGO T-Display clone
 - USB-C, **CH9102** USB-serial chip → appears as **`/dev/ttyACM0`** (not `ttyUSB0`)
+- No touchscreen — interaction is via the web page (the ST7789 is display-only)
+- The exact unit this was built on: [AliExpress listing 1005009890213912](https://de.aliexpress.com/item/1005009890213912.html) (TENSTAR ROBOT). Clones vary — verify your pinout against [docs/HARDWARE.md](docs/HARDWARE.md).
 - See [docs/HARDWARE.md](docs/HARDWARE.md) for the full confirmed pin map.
 
 ## Toolchain
