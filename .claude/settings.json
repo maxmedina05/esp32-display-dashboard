@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "permissions": {
+    "deny": [
+      "Read(./include/secrets.h)",
+      "Read(./src/secrets.h)",
+      "Read(./secrets.h)",
+      "Read(**/secrets.h)",
+      "Read(./.env)",
+      "Read(**/.env)",
+      "Read(**/*.env)",
+      "Bash(cat *secrets.h*)",
+      "Bash(less *secrets.h*)",
+      "Bash(more *secrets.h*)",
+      "Bash(head *secrets.h*)",
+      "Bash(tail *secrets.h*)",
+      "Bash(nl *secrets.h*)",
+      "Bash(grep *secrets.h*)",
+      "Bash(strings *secrets.h*)",
+      "Bash(xxd *secrets.h*)",
+      "Bash(od *secrets.h*)",
+      "Bash(cat *.env*)",
+      "Bash(less *.env*)",
+      "Bash(grep *.env*)"
+    ]
+  },
+  "sandbox": {
+    "filesystem": {
+      "denyRead": [
+        "./include/secrets.h",
+        "./src/secrets.h",
+        "./secrets.h",
+        "./.env"
+      ]
+    }
+  }
+}
