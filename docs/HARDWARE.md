@@ -14,6 +14,8 @@
 | Form factor | ESP32 dev board with **integrated 1.14" IPS display** |
 | Closest known design | **LilyGO/TTGO T-Display clone** (confirmed by working pinout) |
 | Also marketed as | "ideaspark ESP32 1.14 inch ST7789" family |
+| PCB size | **51.49 × 25.09 mm**, 2.54 mm header pitch — matches the official LilyGO T-Display drawing (ruler-checked) |
+| PCB thickness | not yet measured (bare PCB ≈ 1.6 mm; USB-C end is the tallest point) |
 
 ## MCU / Module
 
